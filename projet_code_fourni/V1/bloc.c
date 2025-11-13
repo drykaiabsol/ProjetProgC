@@ -6,6 +6,9 @@
  **/
 
 #include "bloc.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 /* V1
  * Crée et retourne un nouveau bloc de données.
@@ -14,6 +17,16 @@
  */
 tBloc CreerBloc (void) {
   // A COMPLETER
+  tBloc nouveauBloc;
+
+  nouveauBloc = (tBloc) malloc(TAILLE_BLOC);
+
+  if (nouveauBloc == NULL)
+  {
+    fprintf(stderr, "CreerBloc: probleme creation ");
+    return NULL;
+  }
+  return nouveauBloc;
 }
 
 /* V1
@@ -23,6 +36,12 @@ tBloc CreerBloc (void) {
  */
 void DetruireBloc(tBloc *pBloc) {
   // A COMPLETER
+  if (pBloc != NULL && *pBloc != NULL)
+  {
+    free(*pBloc);
+
+    *pBloc = NULL;
+  }
 }
 
 /* V1
@@ -33,6 +52,18 @@ void DetruireBloc(tBloc *pBloc) {
  */
 long EcrireContenuBloc (tBloc bloc, unsigned char *contenu, long taille) {
   // A COMPLETER
+  long tailleACopier;
+
+  if (taille > TAILLE_BLOC)
+  {
+    tailleACopier = TAILLE_BLOC;
+  }else{
+    tailleACopier = taille;
+  }
+
+  memcpy(bloc, contenu, tailleACopier);
+
+  return tailleACopier;
 }
 
 /* V1
@@ -43,4 +74,16 @@ long EcrireContenuBloc (tBloc bloc, unsigned char *contenu, long taille) {
  */
 long LireContenuBloc(tBloc bloc, unsigned char *contenu, long taille) {
   // A COMPLETER
+  long tailleALire;
+
+  if (taille > TAILLE_BLOC)
+  {
+    tailleALire = TAILLE_BLOC;
+  }else{
+    tailleALire = taille;
+  }
+
+  memcpy(contenu, bloc, tailleALire);
+
+return tailleALire;
 }
