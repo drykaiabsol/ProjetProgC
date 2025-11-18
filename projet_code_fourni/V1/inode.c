@@ -142,6 +142,47 @@ natureFichier Type(tInode inode) {
  */
 void AfficherInode(tInode inode) {
   // A COMPLETER
+  if (inode == NULL){
+    printf("<<< vide >>>\n");
+    return;
+  }
+  char *typeString;
+  switch (inode->type){
+    case ORDINAIRE: 
+      typeString = "Ordinaire";
+      break;
+    case REPERTOIRE: 
+      typeString = "Répertoire";
+      break;
+    default: typeString = "Autre";
+      break;
+  }
+  char *dateStr;
+  printf("-------Inode------[%u] :\n", inode->numero);
+  printf("type : %s\n", typeString);
+  printf("taille : %ld octets\n", inode->taille);
+  dateStr = ctime(&(inode->dateDerAcces));
+  dateStr[strlen(dateStr)-1] = '\0';
+  printf("date dernier accès : %s\n", dateStr);
+
+  dateStr = ctime(&(inode->dateDerModif));
+  dateStr[strlen(dateStr)-1] = '\0';
+  printf("date dernière modification : %s\n", dateStr);
+
+  dateStr = ctime(&(inode->dateDerModifInode));
+  dateStr[strlen(dateStr)-1] = '\0';
+  printf("date dernière modification inode : %s\n", dateStr);
+
+  printf("Données :\n");
+  if (inode->blocDonnees[0] != NULL && inode->taille > 0){
+    long i;
+    for (i = 0; i < inode->taille; i++){
+      printf("%c", inode->blocDonnees[0][i]);
+    }
+    printf("\n");
+
+    printf("Nombre de d'octets lus: %ld\n", inode->taille);
+  }
 }
 
 /* V1
