@@ -33,6 +33,15 @@ struct sInode
  */
 tInode CreerInode(int numInode, natureFichier type) {
   // A COMPLETER
+  tInode nouveauInode;
+
+  nouveauInode = (tInode) malloc(sizeof(struct sInode));
+
+  if (nouveauInode == NULL){
+    fprintf(stderr, "CreerInode: probleme creation ");
+    return NULL;
+  }
+  return nouveauInode;
 }
 
 /* V1
@@ -42,6 +51,16 @@ tInode CreerInode(int numInode, natureFichier type) {
  */
 void DetruireInode(tInode *pInode) {
   // A COMPLETER
+  if (pInode != NULL &&  *pInode != NULL){
+    int i;
+    for (i = 0; i < NB_BLOCS_DIRECTS; i++){
+      if ((*pInode)->blocDonnees[i] != NULL){
+        DetruireBloc(&((*pInode)->blocDonnees[i]));
+      }
+    }
+    free(*pInode);
+    *pInode = NULL;
+  }
 }
 
 /* V1
@@ -51,6 +70,10 @@ void DetruireInode(tInode *pInode) {
  */
 time_t DateDerAcces(tInode inode) {
   // A COMPLETER
+  if (inode == NULL){
+    return (time_t) 0;
+  }
+  return inode->dateDerAcces;
 }
 
 /* V1
@@ -60,6 +83,10 @@ time_t DateDerAcces(tInode inode) {
  */
 time_t DateDerModif(tInode inode) {
   // A COMPLETER
+  if (inode == NULL){
+    return (time_t) 0;
+  }
+  return inode->dateDerModifInode;
 }
 
 /* V1
@@ -69,6 +96,10 @@ time_t DateDerModif(tInode inode) {
  */
 time_t DateDerModifFichier(tInode inode) {
   // A COMPLETER
+  if (inode == NULL){ 
+    return (time_t) 0;
+    }
+  return inode->dateDerModif;
 }
 
 /* V1
@@ -78,6 +109,8 @@ time_t DateDerModifFichier(tInode inode) {
  */
 unsigned int Numero(tInode inode) {
   // A COMPLETER
+  if (inode == NULL) return 0;
+  return inode->numero;
 }
 
 /* V1
@@ -87,6 +120,8 @@ unsigned int Numero(tInode inode) {
  */
 long Taille(tInode inode) {
   // A COMPLETER
+  if (inode == NULL) return 0;
+  return inode->taille;
 }
 
 /* V1
@@ -96,6 +131,8 @@ long Taille(tInode inode) {
  */
 natureFichier Type(tInode inode) {
   // A COMPLETER
+  if (inode == NULL) return AUTRE;
+  return inode->type;
 }
 
 /* V1
