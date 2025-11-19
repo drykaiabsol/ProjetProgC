@@ -193,6 +193,34 @@ void AfficherInode(tInode inode) {
  */
 long LireDonneesInode1bloc(tInode inode, unsigned char *contenu, long taille) {
   // A COMPLETER
+  long nbOctetsLire;
+  time_t now;
+
+  if (inode == NULL){
+    return -1;
+  }
+
+  if (taille > TAILLE_BLOC){
+    nbOctetsLire = TAILLE_BLOC;
+  }else{
+    nbOctetsLire = taille;
+  }
+
+  if (nbOctetsLire > inode->taille){
+    nbOctetsLire = inode->taille;
+  }
+
+  if (nbOctetsLire == 0){
+    return 0;
+  }
+
+  LireContenuBloc(inode->blocDonnees[0], contenu, nbOctetsLire);
+
+  now = time(NULL);
+
+  inode->dateDerAcces = now;
+  
+  return nbOctetsLire;
 }
 
 /* V1
@@ -203,4 +231,40 @@ long LireDonneesInode1bloc(tInode inode, unsigned char *contenu, long taille) {
  */
 long EcrireDonneesInode1bloc(tInode inode, unsigned char *contenu, long taille) {
   // A COMPLETER
+  long nbOctetsEcrits;
+  time_t now;
+
+  if (inode == NULL){
+    return -1;
+  }
+
+  if (taille > TAILLE_BLOC){
+    nbOctetsEcrits = TAILLE_BLOC;
+  }else{
+    nbOctetsEcrits = taille;
+  }
+
+  if (nbOctetsEcrits == 0){
+    return 0;
+  }
+
+  if (inode->blocDonnees[0] == NULL){
+    inode->blocDonnees[0] = CreerBloc();
+
+    if (inode->blocDonnees[0] == NULL){
+      return -1;
+    }
+  }
+
+  EcrireContenuBloc(inode->blocDonnees[0], contenu, nbOctetsEcrits);
+
+  now = time(NULL);
+
+  inode->taille = nbOctetsEcrits;
+
+  inode->dateDerAcces = now;
+  inode->dateDerModif = now;
+  inode->dateDerModifInode = now;
+
+  return nbOctetsEcrits;
 }
