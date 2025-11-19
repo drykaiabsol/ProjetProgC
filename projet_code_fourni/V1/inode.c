@@ -41,6 +41,20 @@ tInode CreerInode(int numInode, natureFichier type) {
     fprintf(stderr, "CreerInode: probleme creation ");
     return NULL;
   }
+  time_t dateActuelle = time(NULL);
+  nouveauInode->numero = numInode;
+  nouveauInode->type = type;
+  nouveauInode->taille = 0;
+
+  nouveauInode->dateDerAcces = dateActuelle;
+  nouveauInode->dateDerModif = dateActuelle;
+  nouveauInode->dateDerModifInode = dateActuelle;
+
+  int i;
+  for (i = 0; i < NB_BLOCS_DIRECTS; i++){
+    nouveauInode->blocDonnees[i] = NULL;
+  }
+
   return nouveauInode;
 }
 
