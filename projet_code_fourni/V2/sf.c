@@ -78,6 +78,19 @@ static void DetruireSuperBloc(tSuperBloc *pSuperBloc) {
 */
 static void AfficherSuperBloc(tSuperBloc superBloc) {
   // A COMPLETER
+    if (superBloc == NULL)
+  {
+    printf("SuperBloc : NULL\n");
+    return ;
+  }
+  
+  char *dateStr;
+
+  dateStr = ctime(&(superBloc->dateDerModif));
+  dateStr[strlen(dateStr)-1]='\0';
+
+  printf("Sf de nom %s, super bloc :\n", superBloc->nomDisque);
+  printf("taille bloc = %d, date der modif = %s\n", TAILLE_BLOC, dateStr);
 }
 
 /* V2
