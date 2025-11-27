@@ -1,11 +1,14 @@
 /**
  * ProgC - Projet Automne 25-26 : Gestion de systèmes de fichiers
- * VERSION 2 = VERSION 1
+ * VERSION 1
  * Fichier : inode.c
  * Module de gestion des inodes.
  **/
 #include "inode.h"
 #include "bloc.h"
+#include <stdlib.h> 
+#include <string.h> 
+#include <time.h>
 
 // Nombre maximal de blocs dans un inode
 #define NB_BLOCS_DIRECTS 10
@@ -33,6 +36,29 @@ struct sInode
  */
 tInode CreerInode(int numInode, natureFichier type) {
   // A COMPLETER
+  tInode nouveauInode;
+
+  nouveauInode = (tInode) malloc(sizeof(struct sInode));
+
+  if (nouveauInode == NULL){
+    fprintf(stderr, "CreerInode: probleme creation ");
+    return NULL;
+  }
+  time_t dateActuelle = time(NULL);
+  nouveauInode->numero = numInode;
+  nouveauInode->type = type;
+  nouveauInode->taille = 0;
+
+  nouveauInode->dateDerAcces = dateActuelle;
+  nouveauInode->dateDerModif = dateActuelle;
+  nouveauInode->dateDerModifInode = dateActuelle;
+
+  int i;
+  for (i = 0; i < NB_BLOCS_DIRECTS; i++){
+    nouveauInode->blocDonnees[i] = NULL;
+  }
+
+  return nouveauInode;
 }
 
 /* V1
@@ -42,6 +68,16 @@ tInode CreerInode(int numInode, natureFichier type) {
  */
 void DetruireInode(tInode *pInode) {
   // A COMPLETER
+  if (pInode != NULL &&  *pInode != NULL){
+    int i;
+    for (i = 0; i < NB_BLOCS_DIRECTS; i++){
+      if ((*pInode)->blocDonnees[i] != NULL){
+        DetruireBloc(&((*pInode)->blocDonnees[i]));
+      }
+    }
+    free(*pInode);
+    *pInode = NULL;
+  }
 }
 
 /* V1
@@ -51,6 +87,10 @@ void DetruireInode(tInode *pInode) {
  */
 time_t DateDerAcces(tInode inode) {
   // A COMPLETER
+  if (inode == NULL){
+    return (time_t) 0;
+  }
+  return inode->dateDerAcces;
 }
 
 /* V1
@@ -60,6 +100,10 @@ time_t DateDerAcces(tInode inode) {
  */
 time_t DateDerModif(tInode inode) {
   // A COMPLETER
+  if (inode == NULL){
+    return (time_t) 0;
+  }
+  return inode->dateDerModifInode;
 }
 
 /* V1
@@ -69,6 +113,10 @@ time_t DateDerModif(tInode inode) {
  */
 time_t DateDerModifFichier(tInode inode) {
   // A COMPLETER
+  if (inode == NULL){ 
+    return (time_t) 0;
+    }
+  return inode->dateDerModif;
 }
 
 /* V1
@@ -78,6 +126,8 @@ time_t DateDerModifFichier(tInode inode) {
  */
 unsigned int Numero(tInode inode) {
   // A COMPLETER
+  if (inode == NULL) return 0;
+  return inode->numero;
 }
 
 /* V1
@@ -87,6 +137,8 @@ unsigned int Numero(tInode inode) {
  */
 long Taille(tInode inode) {
   // A COMPLETER
+  if (inode == NULL) return 0;
+  return inode->taille;
 }
 
 /* V1
@@ -96,6 +148,8 @@ long Taille(tInode inode) {
  */
 natureFichier Type(tInode inode) {
   // A COMPLETER
+  if (inode == NULL) return AUTRE;
+  return inode->type;
 }
 
 /* V1
@@ -105,6 +159,47 @@ natureFichier Type(tInode inode) {
  */
 void AfficherInode(tInode inode) {
   // A COMPLETER
+  if (inode == NULL){
+    printf("<<< vide >>>\n");
+    return;
+  }
+  char *typeString;
+  switch (inode->type){
+    case ORDINAIRE: 
+      typeString = "Ordinaire";
+      break;
+    case REPERTOIRE: 
+      typeString = "Répertoire";
+      break;
+    default: typeString = "Autre";
+      break;
+  }
+  char *dateStr;
+  printf("-------Inode------[%u] :\n", inode->numero);
+  printf("type : %s\n", typeString);
+  printf("taille : %ld octets\n", inode->taille);
+  dateStr = ctime(&(inode->dateDerAcces));
+  dateStr[strlen(dateStr)-1] = '\0';
+  printf("date dernier accès : %s\n", dateStr);
+
+  dateStr = ctime(&(inode->dateDerModif));
+  dateStr[strlen(dateStr)-1] = '\0';
+  printf("date dernière modification : %s\n", dateStr);
+
+  dateStr = ctime(&(inode->dateDerModifInode));
+  dateStr[strlen(dateStr)-1] = '\0';
+  printf("date dernière modification inode : %s\n", dateStr);
+
+  printf("Données :\n");
+  if (inode->blocDonnees[0] != NULL && inode->taille > 0){
+    long i;
+    for (i = 0; i < inode->taille; i++){
+      printf("%c", inode->blocDonnees[0][i]);
+    }
+    printf("\n");
+
+    printf("Nombre de d'octets lus: %ld\n", inode->taille);
+  }
 }
 
 /* V1
@@ -115,6 +210,34 @@ void AfficherInode(tInode inode) {
  */
 long LireDonneesInode1bloc(tInode inode, unsigned char *contenu, long taille) {
   // A COMPLETER
+  long nbOctetsLire;
+  time_t now;
+
+  if (inode == NULL){
+    return -1;
+  }
+
+  if (taille > TAILLE_BLOC){
+    nbOctetsLire = TAILLE_BLOC;
+  }else{
+    nbOctetsLire = taille;
+  }
+
+  if (nbOctetsLire > inode->taille){
+    nbOctetsLire = inode->taille;
+  }
+
+  if (nbOctetsLire == 0){
+    return 0;
+  }
+
+  LireContenuBloc(inode->blocDonnees[0], contenu, nbOctetsLire);
+
+  now = time(NULL);
+
+  inode->dateDerAcces = now;
+  
+  return nbOctetsLire;
 }
 
 /* V1
@@ -123,6 +246,42 @@ long LireDonneesInode1bloc(tInode inode, unsigned char *contenu, long taille) {
  * Entrées : l'inode, l'adresse de la zone à recopier et sa taille en octets
  * Retour : le nombre d'octets effectivement écrits dans l'inode ou -1 en cas d'erreur
  */
-EcrireDonneesInode1bloc(tInode inode, unsigned char *contenu, long taille) {
+long EcrireDonneesInode1bloc(tInode inode, unsigned char *contenu, long taille) {
   // A COMPLETER
+  long nbOctetsEcrits;
+  time_t now;
+
+  if (inode == NULL){
+    return -1;
+  }
+
+  if (taille > TAILLE_BLOC){
+    nbOctetsEcrits = TAILLE_BLOC;
+  }else{
+    nbOctetsEcrits = taille;
+  }
+
+  if (nbOctetsEcrits == 0){
+    return 0;
+  }
+
+  if (inode->blocDonnees[0] == NULL){
+    inode->blocDonnees[0] = CreerBloc();
+
+    if (inode->blocDonnees[0] == NULL){
+      return -1;
+    }
+  }
+
+  EcrireContenuBloc(inode->blocDonnees[0], contenu, nbOctetsEcrits);
+
+  now = time(NULL);
+
+  inode->taille = nbOctetsEcrits;
+
+  inode->dateDerAcces = now;
+  inode->dateDerModif = now;
+  inode->dateDerModifInode = now;
+
+  return nbOctetsEcrits;
 }

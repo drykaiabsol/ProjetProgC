@@ -5,6 +5,9 @@
  * Module de gestion d'un systèmes de fichiers (simulé)
  **/
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "sf.h"
 #include "bloc.h"
 
