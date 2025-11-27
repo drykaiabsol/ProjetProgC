@@ -6,6 +6,9 @@
  **/
 
 #include "bloc.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 // Dans le .h : typedef unsigned char *tBloc;
 
@@ -16,6 +19,16 @@
  */
 tBloc CreerBloc (void) {
   // A COMPLETER
+  tBloc nouveauBloc;
+
+  nouveauBloc = (tBloc) malloc(TAILLE_BLOC);
+
+  if (nouveauBloc == NULL)
+  {
+    fprintf(stderr, "CreerBloc: probleme creation ");
+    return NULL;
+  }
+  return nouveauBloc;
 }
 
 /* V1
@@ -25,6 +38,12 @@ tBloc CreerBloc (void) {
  */
 void DetruireBloc(tBloc *pBloc){
   // A COMPLETER
+  if (pBloc != NULL && *pBloc != NULL)
+  {
+    free(*pBloc);
+
+    *pBloc = NULL;
+  }
 }
 
 /* V1
@@ -35,6 +54,18 @@ void DetruireBloc(tBloc *pBloc){
  */
 long EcrireContenuBloc (tBloc bloc, unsigned char *contenu, long taille){
   // A COMPLETER
+  long tailleACopier;
+
+  if (taille > TAILLE_BLOC)
+  {
+    tailleACopier = TAILLE_BLOC;
+  }else{
+    tailleACopier = taille;
+  }
+
+  memcpy(bloc, contenu, tailleACopier);
+
+  return tailleACopier;
 }
 
 /* V1
@@ -45,6 +76,18 @@ long EcrireContenuBloc (tBloc bloc, unsigned char *contenu, long taille){
  */
 long LireContenuBloc(tBloc bloc, unsigned char *contenu, long taille){
   // A COMPLETER
+  long tailleALire;
+
+  if (taille > TAILLE_BLOC)
+  {
+    tailleALire = TAILLE_BLOC;
+  }else{
+    tailleALire = taille;
+  }
+
+  memcpy(contenu, bloc, tailleALire);
+
+return tailleALire;
 }
 
 /* V3
@@ -54,6 +97,22 @@ long LireContenuBloc(tBloc bloc, unsigned char *contenu, long taille){
  */
 int SauvegarderBloc(tBloc bloc, long taille, FILE *fichier){
   // A COMPLETER
+  long tailleAEcrire;
+
+  if (taille > TAILLE_BLOC)
+  {
+    tailleAEcrire = TAILLE_BLOC;
+  }else{
+    tailleAEcrire = taille;
+  }
+
+  size_t retour = fwrite(bloc, 1, tailleAEcrire, fichier);
+
+  if (retour != (size_t)tailleAEcrire)
+  {
+    return -1;
+  }
+  return 0;
 }
 
 /* V3
@@ -63,4 +122,19 @@ int SauvegarderBloc(tBloc bloc, long taille, FILE *fichier){
  */
 int ChargerBloc(tBloc bloc, long taille, FILE *fichier){
   // A COMPLETER
+  long tailleALire;
+
+  if (taille > TAILLE_BLOC)
+  {
+    tailleALire = TAILLE_BLOC;
+  }else{
+    tailleALire = taille;
+  }
+  size_t retour = fread(bloc, 1, tailleALire, fichier);
+
+  if (retour != (size_t)tailleALire)
+  {
+    return -1;
+  }
+  return 0;
 }
