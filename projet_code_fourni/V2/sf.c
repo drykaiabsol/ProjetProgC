@@ -58,6 +58,19 @@ struct sSF
 */
 static tSuperBloc CreerSuperBloc(char nomDisque[]) {
   // A COMPLETER
+  tSuperBloc nouveauSB = (tSuperBloc) malloc(sizeof(struct sSuperBloc));
+
+  if (nouveauSB == NULL)
+  {
+    fprintf(stderr, "CreerSuperBloc probleme creation\n");
+    return NULL;
+  }
+
+  strncpy(nouveauSB->nomDisque, nomDisque, TAILLE_NOM_DISQUE);
+  nouveauSB->nomDisque[TAILLE_NOM_DISQUE] = '\0';
+  nouveauSB->dateDerModif = time(NULL);
+
+  return nouveauSB;
 }
 
 /* V2
@@ -68,6 +81,12 @@ static tSuperBloc CreerSuperBloc(char nomDisque[]) {
 */
 static void DetruireSuperBloc(tSuperBloc *pSuperBloc) {
   // A COMPLETER
+  if (pSuperBloc != NULL && *pSuperBloc != NULL)
+  {
+    free(*pSuperBloc);
+
+    *pSuperBloc = NULL;
+  }
 }
 
 /* V2
@@ -100,6 +119,27 @@ static void AfficherSuperBloc(tSuperBloc superBloc) {
  */
 tSF CreerSF (char nomDisque[]){
   // A COMPLETER
+  tSF nouveauSF = (tSF) malloc(sizeof(struct sSF));
+
+  if (nouveauSF == NULL)
+  {
+    fprintf(stderr, "CreerSF : probleme creation\n");
+    return NULL;
+  }
+
+  nouveauSF->superBloc = CreerSuperBloc(nomDisque);
+
+  if (nouveauSF->superBloc == NULL)
+  {
+    free(nouveauSF);
+    return NULL;
+  }
+
+  nouveauSF->listeInodes.premier = NULL;
+  nouveauSF->listeInodes.dernier = NULL;
+  nouveauSF->listeInodes.nbInodes = 0;
+
+  return nouveauSF;
 }
 
 /* V2
@@ -109,6 +149,27 @@ tSF CreerSF (char nomDisque[]){
  */
 void DetruireSF(tSF *pSF) {
   // A COMPLETER
+  if (pSF == NULL || *pSF == NULL)
+  {
+    return;
+  }
+
+  tSF sfADetruire = *pSF;
+
+  DetruireSuperBloc(&(sfADetruire->superBloc));
+
+  struct sListeInodesElement *courant = sfADetruire->listeInodes.premier;
+  struct sListeInodesElement *suivant;
+
+  while (courant != NULL)
+  {
+    suivant = courant->suivant;
+    DetruireInode(&(courant->inode));
+    free(courant);
+    courant = suivant;
+  }
+  free(sfADetruire);
+  *pSF = NULL;
 }
 
 /* V2
@@ -119,6 +180,22 @@ void DetruireSF(tSF *pSF) {
  */
 void AfficherSF (tSF sf){
   // A COMPLETER
+  if (sf == NULL)
+  {
+    printf("Système de fichiers non initialisé (NULL).\n");
+    return;
+  }
+
+  AfficherSuperBloc(sf->superBloc);
+  printf("Inodes : \n");
+
+  struct sListeInodesElement *courant = sf->listeInodes.premier;
+
+  while (courant != NULL)
+  {
+    AfficherInode(courant->inode);
+    courant = courant->suivant;
+  }
 }
 
 /* V2
@@ -128,4 +205,50 @@ void AfficherSF (tSF sf){
  */
 long Ecrire1BlocFichierSF(tSF sf, char nomFichier[], natureFichier type) {
   // A COMPLETER
+  if (sf == NULL) return -1;
+
+    FILE *fichierSource = fopen(nomFichier, "rb");
+    if (fichierSource == NULL) {
+        return -1;
+    }
+
+    unsigned char buffer[TAILLE_BLOC];
+    long octetsLus = fread(buffer, 1, TAILLE_BLOC, fichierSource);
+    
+    fclose(fichierSource);
+
+    unsigned int nouveauNumero = sf->listeInodes.nbInodes;
+    tInode nouvelInode = CreerInode(nouveauNumero, type);
+    
+    if (nouvelInode == NULL) return -1;
+
+    long octetsEcrits = EcrireDonneesInode1bloc(nouvelInode, buffer, octetsLus);
+    
+    if (octetsEcrits == -1) {
+        DetruireInode(&nouvelInode);
+        return -1;
+    }
+
+    struct sListeInodesElement *nouvelElement = (struct sListeInodesElement*) malloc(sizeof(struct sListeInodesElement));
+    
+    if (nouvelElement == NULL) {
+        DetruireInode(&nouvelInode);
+        return -1;
+    }
+
+    nouvelElement->inode = nouvelInode;
+    nouvelElement->suivant = NULL;
+
+    if (sf->listeInodes.premier == NULL) {
+        sf->listeInodes.premier = nouvelElement;
+        sf->listeInodes.dernier = nouvelElement;
+    } else {
+        sf->listeInodes.dernier->suivant = nouvelElement;
+        sf->listeInodes.dernier = nouvelElement;
+    }
+
+    sf->listeInodes.nbInodes++;
+    sf->superBloc->dateDerModif = time(NULL);
+
+    return octetsEcrits;
 }
