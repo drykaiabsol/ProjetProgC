@@ -5,7 +5,7 @@
  * Module de gestion d'un systèmes de fichiers (simulé)
  **/
 
- #include <stdlib.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -124,27 +124,40 @@ static void AfficherSuperBloc(tSuperBloc superBloc) {
  */
 tSF CreerSF (char nomDisque[]){
   // A COMPLETER
-  tSF nouveauSF = (tSF) malloc(sizeof(struct sSF));
+  tSF sf = (tSF) malloc(sizeof(struct sSF));
+    if (sf == NULL) {
+        fprintf(stderr, "CreerSF : probleme creation\n");
+        return NULL;
+    }
 
-  if (nouveauSF == NULL)
-  {
-    fprintf(stderr, "CreerSF : probleme creation\n");
-    return NULL;
-  }
+    sf->superBloc = CreerSuperBloc(nomDisque);
+    if (sf->superBloc == NULL) {
+        free(sf);
+        return NULL;
+    }
 
-  nouveauSF->superBloc = CreerSuperBloc(nomDisque);
+    sf->listeInodes.premier = NULL;
+    sf->listeInodes.dernier = NULL;
+    sf->listeInodes.nbInodes = 0;
 
-  if (nouveauSF->superBloc == NULL)
-  {
-    free(nouveauSF);
-    return NULL;
-  }
+    tInode racine = CreerInode(0, REPERTOIRE);
+    if (racine == NULL) return NULL;
 
-  nouveauSF->listeInodes.premier = NULL;
-  nouveauSF->listeInodes.dernier = NULL;
-  nouveauSF->listeInodes.nbInodes = 0;
+    tRepertoire rep = CreerRepertoire();
+    if (rep == NULL) return NULL;
 
-  return nouveauSF;
+    EcrireRepertoireDansInode(rep, racine);
+    DetruireRepertoire(&rep);
+
+    struct sListeInodesElement *elem = malloc(sizeof(struct sListeInodesElement));
+    elem->inode = racine;
+    elem->suivant = NULL;
+    
+    sf->listeInodes.premier = elem;
+    sf->listeInodes.dernier = elem;
+    sf->listeInodes.nbInodes = 1;
+
+    return sf;
 }
 
 /* V2
@@ -272,21 +285,16 @@ long EcrireFichierSF(tSF sf, char nomFichier[], natureFichier type) {
     FILE *f = fopen(nomFichier, "rb");
     if (f == NULL) return -1;
 
-    long tailleMax = MAX_FICHIER_OCTETS;
-    unsigned char buffer[640];
-
-    long nbLus = fread(buffer, 1, tailleMax, f);
+    unsigned char buffer[MAX_FICHIER_OCTETS];
+    long nbLus = fread(buffer, 1, MAX_FICHIER_OCTETS, f);
     fclose(f);
-
     if (nbLus < 0) nbLus = 0;
 
     int numInode = sf->listeInodes.nbInodes;
     tInode inode = CreerInode(numInode, type);
     if (inode == NULL) return -1;
 
-    long nbEcrits = EcrireDonneesInode(inode, buffer, nbLus, 0);
-    
-    if (nbEcrits < 0) {
+    if (EcrireDonneesInode(inode, buffer, nbLus, 0) < 0) {
         DetruireInode(&inode);
         return -1;
     }
@@ -296,22 +304,26 @@ long EcrireFichierSF(tSF sf, char nomFichier[], natureFichier type) {
         DetruireInode(&inode);
         return -1;
     }
-
     elem->inode = inode;
     elem->suivant = NULL;
-
-    if (sf->listeInodes.premier == NULL) {
-        sf->listeInodes.premier = elem;
-        sf->listeInodes.dernier = elem;
-    } else {
-        sf->listeInodes.dernier->suivant = elem;
-        sf->listeInodes.dernier = elem;
-    }
-
+    
+    sf->listeInodes.dernier->suivant = elem;
+    sf->listeInodes.dernier = elem;
     sf->listeInodes.nbInodes++;
-    sf->superBloc->dateDerModif = time(NULL);
 
-    return nbEcrits;
+    tInode racine = sf->listeInodes.premier->inode;
+    
+    tRepertoire rep;
+    if (LireRepertoireDepuisInode(&rep, racine) == -1) return -1;
+
+    EcrireEntreeRepertoire(rep, nomFichier, numInode);
+
+    EcrireRepertoireDansInode(rep, racine);
+    
+    DetruireRepertoire(&rep);
+
+    sf->superBloc->dateDerModif = time(NULL);
+    return nbLus;
 }
 
 /* V3
