@@ -105,7 +105,7 @@ extern long LireDonneesInode1bloc(tInode inode, unsigned char *contenu, long tai
  * Entrées : l'inode, l'adresse de la zone à recopier et sa taille en octets
  * Retour : le nombre d'octets effectivement écrits dans l'inode ou -1 en cas d'erreur
  */
-extern EcrireDonneesInode1bloc(tInode inode, unsigned char *contenu, long taille);
+extern long EcrireDonneesInode1bloc(tInode inode, unsigned char *contenu, long taille);
 
 /* V3
  * Lit les données d'un inode avec décalage, et les stocke à une adresse donnée
