@@ -36,6 +36,8 @@ struct sInode
  */
 tInode CreerInode(int numInode, natureFichier type) {
   // A COMPLETER
+  int i;
+  
   tInode nouveauInode;
 
   nouveauInode = (tInode) malloc(sizeof(struct sInode));
@@ -53,7 +55,6 @@ tInode CreerInode(int numInode, natureFichier type) {
   nouveauInode->dateDerModif = dateActuelle;
   nouveauInode->dateDerModifInode = dateActuelle;
 
-  int i;
   for (i = 0; i < NB_BLOCS_DIRECTS; i++){
     nouveauInode->blocDonnees[i] = NULL;
   }
@@ -159,22 +160,23 @@ natureFichier Type(tInode inode) {
  */
 void AfficherInode(tInode inode) {
   // A COMPLETER
+  char *typeString;
+  char *dateStr;
+  long i;
+
   if (inode == NULL){
-    printf("<<< vide >>>\n");
+    printf(" vide \n");
     return;
   }
-  char *typeString;
-  switch (inode->type){
-    case ORDINAIRE: 
-      typeString = "Ordinaire";
-      break;
-    case REPERTOIRE: 
-      typeString = "Répertoire";
-      break;
-    default: typeString = "Autre";
-      break;
-  }
-  char *dateStr;
+    if (inode->type == ORDINAIRE) {
+        typeString = "Ordinaire";
+    } 
+    else if (inode->type == REPERTOIRE) {
+        typeString = "Répertoire";
+    } 
+    else {
+        typeString = "Autre";
+    }
   printf("-------Inode------[%u] :\n", inode->numero);
   printf("type : %s\n", typeString);
   printf("taille : %ld octets\n", inode->taille);
@@ -192,7 +194,6 @@ void AfficherInode(tInode inode) {
 
   printf("Données :\n");
   if (inode->blocDonnees[0] != NULL && inode->taille > 0){
-    long i;
     for (i = 0; i < inode->taille; i++){
       printf("%c", inode->blocDonnees[0][i]);
     }
