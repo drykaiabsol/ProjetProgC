@@ -87,7 +87,7 @@ long LireContenuBloc(tBloc bloc, unsigned char *contenu, long taille){
 
   memcpy(contenu, bloc, tailleALire);
 
-return tailleALire;
+  return tailleALire;
 }
 
 /* V3

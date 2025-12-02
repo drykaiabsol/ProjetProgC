@@ -13,15 +13,15 @@ int main() {
     monInode = CreerInode(1, ORDINAIRE);
     if (monInode == NULL) {
         fprintf(stderr, "Echec de creation de l'inode.\n");
-        return EXIT_FAILURE;
+        return 1;
     }
     
     printf("-> Écriture du contenu...\n");
     char *contenu = "Bonjour Paul Sabatier ! Ceci est le test V1.";
     long taille_contenu = strlen(contenu);
     
-    EcrireDonneesInode1bloc(monInode, (unsigned char*)contenu, taille_contenu);
-    
+    EcrireDonneesInode1bloc(monInode, contenu, taille_contenu);
+
     AfficherInode(monInode);
 
     octetsLus = LireDonneesInode1bloc(monInode, buffer, 64);
@@ -35,5 +35,5 @@ int main() {
     AfficherInode(monInode);
 
     printf("\n--- Test terminé. Lancez valgrind pour vérifier les fuites. ---\n");
-    return EXIT_SUCCESS;
+    return 0;
 }
