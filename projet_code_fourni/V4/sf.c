@@ -374,65 +374,49 @@ int SauvegarderSF(tSF sf, char nomFichier[]) {
  */
 int ChargerSF(tSF *pSF, char nomFichier[]) {
   // A COMPLETER
-  FILE *fichier = fopen(nomFichier, "rb");
-    if (fichier == NULL) return -1;
+  FILE *f = fopen(nomFichier, "rb");
+    if (f == NULL) return -1;
 
-    *pSF = CreerSF("temp");
-    if (*pSF == NULL) {
-        fclose(fichier);
-        return -1;
-    }
+    *pSF = CreerSF("temp"); 
+    if (*pSF == NULL) { fclose(f); return -1; }
+    
+    DetruireSF(pSF); 
+    
+    *pSF = (tSF) malloc(sizeof(struct sSF));
+    (*pSF)->listeInodes.premier = NULL; 
+    (*pSF)->listeInodes.dernier = NULL; 
+    (*pSF)->listeInodes.nbInodes = 0;
+    (*pSF)->superBloc = (tSuperBloc) malloc(sizeof(struct sSuperBloc));
 
-    int erreur = 0;
-
-    if (fread((*pSF)->superBloc, sizeof(struct sSuperBloc), 1, fichier) != 1) {
-        erreur = 1;
-    }
-
-    int nbInodesALire = 0;
-    if (erreur == 0) {
-        if (fread(&nbInodesALire, sizeof(int), 1, fichier) != 1) {
-            erreur = 1;
-        }
-    }
+    int err = 0;
+    if (fread((*pSF)->superBloc, sizeof(struct sSuperBloc), 1, f) != 1) err = 1;
+    
+    int nb = 0;
+    if (!err && fread(&nb, sizeof(int), 1, f) != 1) err = 1;
 
     int i = 0;
-    while (i < nbInodesALire && erreur == 0) {
-        
-        struct sListeInodesElement *nouvelElement = (struct sListeInodesElement*) malloc(sizeof(struct sListeInodesElement));
-        if (nouvelElement == NULL) {
-            erreur = 1;
-        } 
+    while (i < nb && !err) {
+        struct sListeInodesElement *e = malloc(sizeof(struct sListeInodesElement));
+        if (e == NULL) err = 1;
         else {
-            if (ChargerInode(&(nouvelElement->inode), fichier) == -1) {
-                free(nouvelElement);
-                erreur = 1;
-            } 
-            else {
-                nouvelElement->suivant = NULL;
-                
+            if (ChargerInode(&(e->inode), f) != 0) {
+                free(e); err = 1;
+            } else {
+                e->suivant = NULL;
                 if ((*pSF)->listeInodes.premier == NULL) {
-                    (*pSF)->listeInodes.premier = nouvelElement;
-                    (*pSF)->listeInodes.dernier = nouvelElement;
+                    (*pSF)->listeInodes.premier = e;
+                    (*pSF)->listeInodes.dernier = e;
                 } else {
-                    (*pSF)->listeInodes.dernier->suivant = nouvelElement;
-                    (*pSF)->listeInodes.dernier = nouvelElement;
+                    (*pSF)->listeInodes.dernier->suivant = e;
+                    (*pSF)->listeInodes.dernier = e;
                 }
-                
                 (*pSF)->listeInodes.nbInodes++;
-                
                 i++;
             }
         }
     }
-
-    fclose(fichier);
-
-    if (erreur == 1) {
-        DetruireSF(pSF);
-        return -1;
-    }
-
+    fclose(f);
+    if (err) { DetruireSF(pSF); return -1; }
     return 0;
 }
 
